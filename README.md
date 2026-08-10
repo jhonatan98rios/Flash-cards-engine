@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Study Engine
 
-## Getting Started
+AI-generated study topics: **flashcards + questions (multiple choice / true-false) + roadmap**, with spaced review dates.
 
-First, run the development server:
+- A **topic** is the umbrella: title, description, summary, roadmap steps, flashcards, questions.
+- Feed it a **dataset** (notes, exam goal, pasted content) → the AI generates everything.
+- Cards and questions carry a `visualizationDate` — created items appear *tomorrow*, then each review schedules the next one (Again → 1d, Good → ×2, Easy → ×4, cap 90d).
+- **Finish the roadmap** (or not — you can expand anytime), then **Expand topic** sends the summary back to the AI for a deeper patch.
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local   # add your AI_API_KEY
+npm run dev                        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Note: on Termux/Android this project builds with `--webpack` (Turbopack has no native bindings there). Without `AI_API_KEY` the app runs in **sample mode** — deterministic content so you can try the full flow.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Any OpenAI-compatible endpoint works (OpenAI, OpenRouter, Groq, Ollama…): set `AI_API_URL`, `AI_API_KEY`, `AI_MODEL` in `.env.local`.
 
-## Learn More
+## Layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+lib/types.ts        data model
+lib/scheduling.ts   spaced-review math (visualizationDate)
+lib/store.ts        JSON file store (data/db.json, gitignored)
+lib/ai.ts           content generation (OpenAI-compatible + sample fallback)
+lib/engine.ts       topic building / patch merging
+app/api/            HTTP API (create/expand/rate/answer/toggle/delete)
+app/page.tsx        dashboard (topics grouped by subject)
+app/topics/[id]/    topic detail: summary, roadmap, study, expand
+components/         client UI (flip cards, quiz, forms)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm test   # node:test, no deps
+```

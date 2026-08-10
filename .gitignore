@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# study data (personal, gitignored)
+/data/
+
 # production
 /build
 
