@@ -16,15 +16,14 @@ export default async function TopicPage({ params }: { params: Promise<{ id: stri
   if (!topic) notFound();
 
   const today = todayISO();
-  const dueCards = topic.flashcards
-    .filter((c) => isDue(c.visualizationDate, today))
-    .sort((a, b) => a.visualizationDate.localeCompare(b.visualizationDate));
-  const dueQuestions = topic.questions
-    .filter((q) => isDue(q.visualizationDate, today))
-    .sort((a, b) => a.visualizationDate.localeCompare(b.visualizationDate));
-  const upcoming = [...topic.flashcards, ...topic.questions]
-    .filter((i) => i.visualizationDate > today)
-    .sort((a, b) => a.visualizationDate.localeCompare(b.visualizationDate));
+  const dueCards = topic.flashcards.filter((c) => isDue(c.visualizationDate, today));
+  const dueQuestions = topic.questions.filter((q) => isDue(q.visualizationDate, today));
+  const allCards = [...topic.flashcards].sort((a, b) =>
+    a.visualizationDate.localeCompare(b.visualizationDate)
+  );
+  const allQuestions = [...topic.questions].sort((a, b) =>
+    a.visualizationDate.localeCompare(b.visualizationDate)
+  );
   const roadmap = [...topic.roadmap].sort((a, b) => a.order - b.order);
   const doneSteps = roadmap.filter((s) => s.done).length;
 
@@ -80,37 +79,56 @@ export default async function TopicPage({ params }: { params: Promise<{ id: stri
         )}
       </section>
 
-      {/* Study */}
+      {/* Study: all material, with due-today badges; the visualizationDate
+          still marks what's ready for review. */}
       <section className="mb-6 rounded-xl border border-black/10 p-5 dark:border-white/15">
-        <h2 className="mb-3 font-semibold">Study</h2>
-        {dueCards.length === 0 && dueQuestions.length === 0 ? (
+        <h2 className="mb-3 font-semibold">
+          Study{" "}
+          <span className="text-sm font-normal text-zinc-500">
+            {dueCards.length + dueQuestions.length} due today ·{" "}
+            {allCards.length + allQuestions.length} items
+          </span>
+        </h2>
+        {allCards.length === 0 && allQuestions.length === 0 ? (
           <p className="text-sm text-zinc-500">
-            {upcoming.length === 0
-              ? "No cards or questions yet — expand this topic to grow it."
-              : `Nothing due today. Next review: ${new Date(`${upcoming[0].visualizationDate}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })} (${upcoming.length} items upcoming).`}
+            No cards or questions yet — expand this topic to grow it.
           </p>
         ) : (
           <div className="space-y-6">
-            {dueCards.length > 0 && (
+            {allCards.length > 0 && (
               <div>
                 <h3 className="mb-2 text-sm font-medium text-zinc-500">
-                  Flashcards due today ({dueCards.length}) — tap to flip
+                  Flashcards ({allCards.length}) — tap to flip
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {dueCards.map((card) => (
-                    <FlashcardView key={card.id} card={card} />
+                  {allCards.map((card) => (
+                    <div key={card.id}>
+                      {isDue(card.visualizationDate, today) && (
+                        <p className="mb-1 text-right text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                          due today
+                        </p>
+                      )}
+                      <FlashcardView card={card} />
+                    </div>
                   ))}
                 </div>
               </div>
             )}
-            {dueQuestions.length > 0 && (
+            {allQuestions.length > 0 && (
               <div>
                 <h3 className="mb-2 text-sm font-medium text-zinc-500">
-                  Questions due today ({dueQuestions.length})
+                  Questions ({allQuestions.length})
                 </h3>
                 <div className="space-y-4">
-                  {dueQuestions.map((q) => (
-                    <QuestionView key={q.id} question={q} />
+                  {allQuestions.map((q) => (
+                    <div key={q.id}>
+                      {isDue(q.visualizationDate, today) && (
+                        <p className="mb-1 text-right text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                          due today
+                        </p>
+                      )}
+                      <QuestionView question={q} />
+                    </div>
                   ))}
                 </div>
               </div>
