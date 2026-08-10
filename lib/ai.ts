@@ -1,8 +1,10 @@
+import { ChatDeepSeek } from "@langchain/deepseek";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import type { Topic } from "./types";
 
-// Generation engine: OpenAI-compatible chat completions API (works with
-// OpenAI, OpenRouter, Groq, Ollama, ...). Without AI_API_KEY it falls back
-// to a deterministic sample generator so the app is usable out of the box.
+// Generation engine: DeepSeek via LangChain. Without DEEPSEEK_API_KEY it
+// falls back to a deterministic sample generator so the app runs out of
+// the box (e.g. on machines where nothing is configured yet).
 
 export interface RawStep {
   title: string;
@@ -32,10 +34,17 @@ export interface TopicPatch {
   questions: RawQuestion[];
 }
 
-export const hasAI = () => Boolean(process.env.AI_API_KEY);
+export const hasAI = () => Boolean(process.env.DEEPSEEK_API_KEY);
 
-const MODEL = process.env.AI_MODEL ?? "gpt-4o-mini";
-const BASE = process.env.AI_API_URL ?? "https://api.openai.com/v1";
+function model() {
+  return new ChatDeepSeek({
+    apiKey: process.env.DEEPSEEK_API_KEY ?? "",
+    model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
+    temperature: 0.7,
+    maxTokens: 4096,
+    timeout: 120_000,
+  });
+}
 
 const SCHEMA = `Respond with ONLY a JSON object, no markdown, matching exactly:
 {
@@ -51,31 +60,13 @@ For true/false questions use alternatives ["True", "False"] and the correct inde
 answerIndex must point at the correct alternative.`;
 
 async function chatJSON(system: string, user: string): Promise<unknown> {
-  const res = await fetch(`${BASE}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.AI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature: 0.7,
-    }),
-    signal: AbortSignal.timeout(120_000),
-  });
-  if (!res.ok) {
-    throw new Error(`AI request failed (${res.status}): ${await res.text()}`);
-  }
-  const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
-  };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("AI returned an empty response");
-  return parseJSON(content);
+  const response = await model().invoke([
+    new SystemMessage(system),
+    new HumanMessage(user),
+  ]);
+  const content = response.content;
+  const text = typeof content === "string" ? content : JSON.stringify(content);
+  return parseJSON(text);
 }
 
 /** Strip markdown fences if the model wrapped the JSON, then parse. */
@@ -187,14 +178,14 @@ Expansion request: ${instruction}`;
   return assertPatchShape(await chatJSON(system, user));
 }
 
-// ---- sample mode (no AI_API_KEY) ----
+// ---- sample mode (no DEEPSEEK_API_KEY) ----
 
 function generateSampleContent(subject: string, prompt: string): TopicContent {
   const goal = prompt.trim() || "the dataset";
   return {
     title: `${subject}: ${goal.slice(0, 60)}`,
     description:
-      "Sample content — set AI_API_KEY in .env.local to generate real study material.",
+      "Sample content — set DEEPSEEK_API_KEY in .env.local to generate real study material.",
     summary: `Study topic for ${subject} built around "${goal}". This is sample mode:
 the AI engine is not configured, so this content is generic. The roadmap covers
 the standard study loop, flashcards and questions are placeholders that demonstrate
@@ -243,7 +234,7 @@ function samplePatch(instruction: string): TopicPatch {
     flashcards: [
       {
         front: `Follow-up question about: ${instruction.slice(0, 60)}`,
-        back: "Answer from the dataset. (Sample mode — set AI_API_KEY for real patches)",
+        back: "Answer from the dataset. (Sample mode — set DEEPSEEK_API_KEY for real patches)",
       },
     ],
     questions: [

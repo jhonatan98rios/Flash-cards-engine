@@ -1,5 +1,6 @@
 ▲ Next.js 16.3.0
 - Local:         http://localhost:3111
 - Network:       http://192.168.3.15:3111
-✓ Ready in 1135ms
-✓ Running next.config.ts took 1304ms
+✓ Ready in 1075ms
+✓ Running next.config.ts took 1277ms
+[study] MONGODB_URI not set — using data/db.json as the data store

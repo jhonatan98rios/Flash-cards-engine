@@ -28,7 +28,7 @@ export default async function Home() {
             </span>
           ) : (
             <span className="text-amber-600 dark:text-amber-400">
-              Sample mode — set AI_API_KEY in .env.local for real content.
+              Sample mode — set DEEPSEEK_API_KEY in .env.local for real content.
             </span>
           )}
         </p>

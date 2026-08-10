@@ -7,27 +7,30 @@ AI-generated study topics: **flashcards + questions (multiple choice / true-fals
 - Cards and questions carry a `visualizationDate` — created items appear *tomorrow*, then each review schedules the next one (Again → 1d, Good → ×2, Easy → ×4, cap 90d).
 - **Finish the roadmap** (or not — you can expand anytime), then **Expand topic** sends the summary back to the AI for a deeper patch.
 
+## Stack
+
+- **AI**: DeepSeek via LangChain (`@langchain/deepseek`). Without `DEEPSEEK_API_KEY` the app runs in **sample mode** (deterministic content so you can try the full flow).
+- **Data**: MongoDB (`mongodb` driver), one embedded document per topic. No `MONGODB_URI` → falls back to `data/db.json` for local dev.
+- Single user, no auth — the repo interface (`lib/repo/types.ts`) is the seam where owner scoping lands later.
+
 ## Run
 
 ```bash
 npm install
-cp .env.local.example .env.local   # add your AI_API_KEY
+cp .env.local.example .env.local   # add DEEPSEEK_API_KEY and/or MONGODB_URI
 npm run dev                        # http://localhost:3000
 ```
 
-Note: on Termux/Android this project builds with `--webpack` (Turbopack has no native bindings there). Without `AI_API_KEY` the app runs in **sample mode** — deterministic content so you can try the full flow.
-
-## API
-
-Any OpenAI-compatible endpoint works (OpenAI, OpenRouter, Groq, Ollama…): set `AI_API_URL`, `AI_API_KEY`, `AI_MODEL` in `.env.local`.
+Note: on Termux/Android this project builds with `--webpack` (Turbopack has no native bindings there).
 
 ## Layout
 
 ```
 lib/types.ts        data model
 lib/scheduling.ts   spaced-review math (visualizationDate)
-lib/store.ts        JSON file store (data/db.json, gitignored)
-lib/ai.ts           content generation (OpenAI-compatible + sample fallback)
+lib/repo/           data layer: TopicRepo interface + mongo.ts + json.ts fallback
+lib/store.ts        facade over the current repo backend
+lib/ai.ts           DeepSeek + LangChain generation (sample fallback without a key)
 lib/engine.ts       topic building / patch merging
 app/api/            HTTP API (create/expand/rate/answer/toggle/delete)
 app/page.tsx        dashboard (topics grouped by subject)
