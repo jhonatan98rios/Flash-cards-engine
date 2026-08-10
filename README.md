@@ -4,7 +4,7 @@ AI-generated study topics: **flashcards + questions (multiple choice / true-fals
 
 - A **topic** is the umbrella: title, description, summary, roadmap steps, flashcards, questions.
 - Feed it a **dataset** (notes, exam goal, pasted content) → the AI generates everything.
-- Cards and questions carry a `visualizationDate` — created items appear *tomorrow*, then each review schedules the next one (Again → 1d, Good → ×2, Easy → ×4, cap 90d).
+- Cards and questions carry a `visualizationDate` — created items are due today; each review schedules the next one (Again → 1d, Good → ×2, Easy → ×4, cap 90d).
 - **Finish the roadmap** (or not — you can expand anytime), then **Expand topic** sends the summary back to the AI for a deeper patch.
 
 ## Stack

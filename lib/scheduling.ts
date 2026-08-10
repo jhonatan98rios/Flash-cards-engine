@@ -32,9 +32,9 @@ export function nextInterval(current: number, rating: "again" | "good" | "easy")
   }
 }
 
-/** New items start with interval 0 and are due tomorrow. */
+/** New items start with interval 0 and are due immediately (today). */
 export function newItemVisualizationDate(): string {
-  return addDays(todayISO(), 1);
+  return todayISO();
 }
 
 /** Due = its visualization date has arrived. */

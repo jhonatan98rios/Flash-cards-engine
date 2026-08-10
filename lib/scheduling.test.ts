@@ -33,9 +33,8 @@ describe("scheduling", () => {
     assert.equal(nextInterval(30, "easy"), 90);
   });
 
-  it("new items are due tomorrow, not today", () => {
-    const tomorrow = addDays(toISODate(new Date()), 1);
-    assert.equal(newItemVisualizationDate(), tomorrow);
+  it("new items are due today", () => {
+    assert.equal(newItemVisualizationDate(), toISODate(new Date()));
   });
 
   it("isDue compares lexicographically (date-only)", () => {
